@@ -23,7 +23,7 @@ Write-Host ""
 # ============================================================
 # Step 1: Python 確認
 # ============================================================
-Write-Host "[Step 1/5] Python を確認中..."
+Write-Host "[Step 1/6] Python を確認中..."
 
 $PythonExe      = $null
 $PythonBaseArgs = @()
@@ -62,7 +62,7 @@ Write-Host ""
 # ============================================================
 # Step 2: Git 確認（silentcipher が git 依存パッケージのため必須）
 # ============================================================
-Write-Host "[Step 2/5] Git を確認中..."
+Write-Host "[Step 2/6] Git を確認中..."
 
 try {
     $gitVer = & git '--version' 2>&1
@@ -83,9 +83,38 @@ try {
 Write-Host ""
 
 # ============================================================
-# Step 3: 仮想環境
+# Step 3: ffmpeg 確認 / インストール
 # ============================================================
-Write-Host "[Step 3/5] 仮想環境を確認中..."
+Write-Host "[Step 3/6] ffmpeg を確認中..."
+
+$ffmpegOk = $false
+try {
+    $ffVer = & ffmpeg '-version' 2>&1 | Select-Object -First 1
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host "  $ffVer"
+        $ffmpegOk = $true
+    }
+} catch {}
+
+if (-not $ffmpegOk) {
+    Write-Host "  ffmpeg が見つかりません。winget でインストールします..."
+    winget install --id Gyan.FFmpeg --source winget --silent --accept-package-agreements --accept-source-agreements
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host "  インストール完了。"
+        $env:PATH = [System.Environment]::GetEnvironmentVariable('PATH', 'Machine') + ';' + [System.Environment]::GetEnvironmentVariable('PATH', 'User')
+    } else {
+        Write-Host ""
+        Write-Host "[WARNING] ffmpeg のインストールに失敗しました。"
+        Write-Host "          音声ファイルの読み込みに影響する場合があります。"
+        Write-Host "          手動でインストールしてください: https://ffmpeg.org/download.html"
+    }
+}
+Write-Host ""
+
+# ============================================================
+# Step 4: 仮想環境
+# ============================================================
+Write-Host "[Step 4/6] 仮想環境を確認中..."
 
 if (-not (Test-Path $ActivatePs)) {
     Write-Host "  仮想環境を作成中: $VenvDir"
@@ -104,9 +133,9 @@ if (-not (Test-Path $ActivatePs)) {
 Write-Host ""
 
 # ============================================================
-# Step 4: PyTorch (CUDA 12.8)
+# Step 5: PyTorch (CUDA 12.8)
 # ============================================================
-Write-Host "[Step 4/5] PyTorch を確認中..."
+Write-Host "[Step 5/6] PyTorch を確認中..."
 
 $torchVer = & $PyVenvExe '-c' 'import torch; print(torch.__version__)' 2>&1
 if ($LASTEXITCODE -eq 0) {
@@ -128,9 +157,9 @@ if ($LASTEXITCODE -eq 0) {
 Write-Host ""
 
 # ============================================================
-# Step 5: パッケージインストール (pyproject.toml)
+# Step 6: パッケージインストール (pyproject.toml)
 # ============================================================
-Write-Host "[Step 5/5] 依存パッケージを確認中..."
+Write-Host "[Step 6/6] 依存パッケージを確認中..."
 
 $pyprojectFile = Join-Path $RepoDir 'pyproject.toml'
 $hashFile      = Join-Path $VenvDir '.req_hash'
