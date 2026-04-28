@@ -50,3 +50,5 @@ checkpoints/
 .DS_Store
 
 slurm_script/
+/.venv
+/pretrained_models
