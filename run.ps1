@@ -100,8 +100,16 @@ if (-not $ffmpegOk) {
     Write-Host "  ffmpeg が見つかりません。winget でインストールします..."
     winget install --id Gyan.FFmpeg --source winget --silent --accept-package-agreements --accept-source-agreements
     if ($LASTEXITCODE -eq 0) {
-        Write-Host "  インストール完了。"
-        $env:PATH = [System.Environment]::GetEnvironmentVariable('PATH', 'Machine') + ';' + [System.Environment]::GetEnvironmentVariable('PATH', 'User')
+        Write-Host "  インストール完了。環境変数 PATH を再読み込みします..."
+        $machinePath = [System.Environment]::GetEnvironmentVariable('PATH', [System.EnvironmentVariableTarget]::Machine)
+        $userPath    = [System.Environment]::GetEnvironmentVariable('PATH', [System.EnvironmentVariableTarget]::User)
+        $env:PATH    = (@($machinePath, $userPath) | Where-Object { $_ }) -join ';'
+        $verifyVer   = & ffmpeg '-version' 2>&1 | Select-Object -First 1
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "  確認済み: $verifyVer"
+        } else {
+            Write-Host "  注意: ffmpeg は次回のターミナル起動後に有効になります。"
+        }
     } else {
         Write-Host ""
         Write-Host "[WARNING] ffmpeg のインストールに失敗しました。"
