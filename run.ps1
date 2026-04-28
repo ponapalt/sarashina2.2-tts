@@ -204,7 +204,7 @@ Write-Host ""
 # ============================================================
 Write-Host "============================================================"
 Write-Host "  sarashina2.2-tts$vllmLabel"
-Write-Host "  URL  : http://127.0.0.1:7860"
+Write-Host "  URL  : http://127.0.0.1:7861"
 Write-Host "  終了 : Ctrl+C"
 Write-Host "============================================================"
 Write-Host ""
@@ -212,13 +212,15 @@ Write-Host ""
 Set-Location $RepoDir
 . $ActivatePs
 
+$env:GRADIO_SERVER_PORT = '7861'
+
 Start-Job -ScriptBlock {
     $tcp = [System.Net.Sockets.TcpClient]::new()
     while ($true) {
-        try { $tcp.Connect('127.0.0.1', 7860); break } catch { Start-Sleep -Milliseconds 500 }
+        try { $tcp.Connect('127.0.0.1', 7861); break } catch { Start-Sleep -Milliseconds 500 }
     }
     $tcp.Close()
-    Start-Process 'http://127.0.0.1:7860'
+    Start-Process 'http://127.0.0.1:7861'
 } | Out-Null
 
 if ($UseVllm) {
